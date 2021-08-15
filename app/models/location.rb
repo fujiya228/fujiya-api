@@ -1,7 +1,7 @@
 class Location < ApplicationRecord
   # attribute :id, :latitude, :longitude
-  has_many :place
-  has_many :score
+  has_many :places, dependent: :destroy
+  has_many :scores, dependent: :destroy
 
   validates :location_id, presence: true, uniqueness: true
   
