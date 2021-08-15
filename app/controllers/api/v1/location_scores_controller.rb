@@ -29,7 +29,6 @@ module Api::V1
               sleep 2 # リクエスト多いとINVALID_REQUEST返された
               res = conn.get '/maps/api/place/nearbysearch/json', { pagetoken: data["next_page_token"], key: 'AIzaSyBLLxwnSdKnQFDAapcGqMjBhbxz0yUknAg' }
               data = JSON.parse(res.body)
-              logger.debug data
               count += data["results"].count
               break if count > 60
             end
