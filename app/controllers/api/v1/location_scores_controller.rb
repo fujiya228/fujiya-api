@@ -6,7 +6,6 @@ module Api::V1
     
     def show
       uri = "https://maps.googleapis.com"
-      # uri = "http://192.168.1.9:5500/"
       conn = Faraday::Connection.new(url: uri) do |builder|
         builder.adapter Faraday.default_adapter
         builder.request :url_encoded 
