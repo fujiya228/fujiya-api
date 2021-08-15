@@ -1,9 +1,12 @@
 module Api::V1
   class LocationScoresController < ApplicationController
+
+    PLACE_TYPE_LIST = ['restaurant', 'beauty_salon', 'bank', 'department_store', 'dentist'].freeze
     before_action :validate_location_id
     
     def show
       uri = "https://maps.googleapis.com"
+      # uri = "http://192.168.1.9:5500/"
       conn = Faraday::Connection.new(url: uri) do |builder|
         builder.adapter Faraday.default_adapter
         builder.request :url_encoded 
@@ -13,12 +16,27 @@ module Api::V1
 
       location = Location.find_by(location_id: location_id)
       if location
-        render json: { location: { id: location.id, location_id: location.location_id} }, status: :ok
+        render json: { location: { location_id: location.location_id, latitude: location.latitude, longitude: location.longitude }, places: Hash[*location.places.pluck(:place_type, :count).flatten] }, status: :ok
       else
         location = Location.create(location_id: location_id)
         if location.valid?
-          resp = conn.get '/maps/api/place/nearbysearch/json', { location: location_id, radius: 1500, type: 'restaurant', key: 'AIzaSyBLLxwnSdKnQFDAapcGqMjBhbxz0yUknAg' }
-          render json: { response: JSON.parse(resp.body) }
+          places = {}
+          PLACE_TYPE_LIST.each do |type|
+            res = conn.get '/maps/api/place/nearbysearch/json', { location: location_id, radius: 1000, type: type, key: 'AIzaSyBLLxwnSdKnQFDAapcGqMjBhbxz0yUknAg' }
+            data = JSON.parse(res.body)
+            count = data["results"].count
+            while data["next_page_token"] do
+              sleep 2 # リクエスト多いとINVALID_REQUEST返された
+              res = conn.get '/maps/api/place/nearbysearch/json', { pagetoken: data["next_page_token"], key: 'AIzaSyBLLxwnSdKnQFDAapcGqMjBhbxz0yUknAg' }
+              data = JSON.parse(res.body)
+              logger.debug data
+              count += data["results"].count
+              break if count > 60
+            end
+            place = location.places.create({place_type: type, count: count })
+            places[type] = count
+          end
+          render json: { location: { location_id: location.location_id, latitude: location.latitude, longitude: location.longitude }, places: places }
         else
           render json: { messages: location.errors.full_messages }, status: :bad_request
         end
@@ -38,7 +56,6 @@ module Api::V1
     def latitude
       @latitude ||= loc_to_f(params[:id].split('_')[0])
     end
-    
     
     def longitude
       @longitude ||= loc_to_f(params[:id].split('_')[1])
