@@ -21,14 +21,10 @@ ARG USERNAME=public-user
 ARG GROUPNAME=public-user
 ARG UID=228
 ARG GID=228
-ARG PASSWORD=public-user
-RUN groupadd -g $GID $GROUPNAME && \
-    useradd -m -s /bin/bash -u $UID -g $GID -G sudo $USERNAME && \
-    echo $USERNAME:$PASSWORD | chpasswd && \
-    echo "$USERNAME   ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+RUN groupadd -g $GID $GROUPNAME
+RUN useradd -m -s /bin/bash -u $UID -g $GID $USERNAME
 
 ENTRYPOINT ["entrypoint.sh"]
-# USER $USERNAME
 EXPOSE 3000
 
 CMD ["rails", "server", "-b", "0.0.0.0"]
