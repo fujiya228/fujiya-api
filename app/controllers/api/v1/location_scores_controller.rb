@@ -97,12 +97,13 @@ module Api::V1
     
     def get_place_count keyword
       count = 0
-      res = conn.get '/maps/api/place/nearbysearch/json', { location: location_id, radius: 500, keyword: keyword, key: 'AIzaSyBLLxwnSdKnQFDAapcGqMjBhbxz0yUknAg' }
+      # TODO:エラーハンドリングしてない。追加する
+      res = conn.get '/maps/api/place/nearbysearch/json', { location: location_id, radius: 500, keyword: keyword, key: ENV['GOOGLE_PLACES_API_KEY'] }
       data = JSON.parse(res.body)
       count = data["results"].count
       while data["next_page_token"] do
         sleep 2 # リクエスト多いとINVALID_REQUEST返された
-        res = conn.get '/maps/api/place/nearbysearch/json', { pagetoken: data["next_page_token"], key: 'AIzaSyBLLxwnSdKnQFDAapcGqMjBhbxz0yUknAg' }
+        res = conn.get '/maps/api/place/nearbysearch/json', { pagetoken: data["next_page_token"], key: ENV['GOOGLE_PLACES_API_KEY'] }
         data = JSON.parse(res.body)
         count += data["results"].count
         break if count > 40
