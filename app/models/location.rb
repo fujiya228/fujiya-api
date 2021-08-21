@@ -44,7 +44,7 @@ class Location < ApplicationRecord
   end
 
   def point_format point
-    point.round(6)
+    point.round(3)
   end
 
   def loc_to_f loc
