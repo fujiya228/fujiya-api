@@ -10,7 +10,10 @@ GROUP_ID=${LOCAL_GID:-1000}
 echo $@
 
 echo `whoami`
-if [ `whoami` = "root" ]; then
+if [ $1 = "bundler" ]; then
+    echo "exec by root user"
+    exec "$@"
+elif [ `whoami` = "root" ]; then
     echo "is root user => exec by public-user"
     usermod -u $USER_ID -o public-user
     groupmod -g $GROUP_ID public-user
