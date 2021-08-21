@@ -100,6 +100,9 @@ module Api::V1
       # TODO:エラーハンドリングしてない。追加する
       res = conn.get '/maps/api/place/nearbysearch/json', { location: location_id, radius: 500, keyword: keyword, key: ENV['GOOGLE_PLACES_API_KEY'] }
       data = JSON.parse(res.body)
+      if res.status != 200
+        raise RuntimeError
+      end
       count = data["results"].count
       while data["next_page_token"] do
         sleep 2 # リクエスト多いとINVALID_REQUEST返された
@@ -120,6 +123,15 @@ module Api::V1
         builder.response :logger # ログを出す
         builder.headers['Content-Type'] = 'application/json' # ヘッダー指定
       end
+    end
+
+    rescue_from StandardError do |e|
+      render json: {
+        errors: [
+          server: 'internal server error'
+        ],
+        status: 500
+      }, status: :internal_server_error
     end
   end
 end
