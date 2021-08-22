@@ -50,3 +50,4 @@ gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 
 # ここから自分で入れたやつ
 gem 'faraday'
+gem 'rack-cors'
